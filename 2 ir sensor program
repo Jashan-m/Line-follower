@@ -1,0 +1,137 @@
+// Define pins for motors
+const int motorLeftPin1 = 3;
+const int motorLeftPin2 = 4;
+const int motorRightPin1 = 5;
+const int motorRightPin2 = 6;
+
+// Define pins for line sensors
+const int leftSensorPin = A0;
+const int rightSensorPin = A1;
+
+// Define threshold for detecting line
+const int lineThreshold = 50;
+
+// Define maximum speed for motors
+const int maxSpeed = 125;
+
+// Flag to indicate whether the robot has detected the line
+bool lineDetected = false;
+
+void setup() {
+  // Set motor pins as outputs
+  pinMode(motorLeftPin1, OUTPUT);
+  pinMode(motorLeftPin2, OUTPUT);
+  pinMode(motorRightPin1, OUTPUT);
+  pinMode(motorRightPin2, OUTPUT);
+
+  // Set sensor pins as inputs
+  pinMode(leftSensorPin, INPUT);
+  pinMode(rightSensorPin, INPUT);
+
+  // Initialize serial communication
+  Serial.begin(9600);
+}
+
+void loop() {
+  int leftSensorValue = analogRead(leftSensorPin);
+  int rightSensorValue = analogRead(rightSensorPin);
+
+  // Print sensor values to serial monitor
+  Serial.print("Left Sensor: ");
+  Serial.print(leftSensorValue);
+  Serial.print(" | Right Sensor: ");
+  Serial.print(rightSensorValue);
+
+  if (!lineDetected) {
+    // Move straight until line is detected
+    moveForwardAtMaxSpeed();
+    Serial.print(" | Motor Speeds: ");
+    Serial.print("Left: ");
+    Serial.print(maxSpeed);
+    Serial.print(" | Right: ");
+    Serial.println(maxSpeed);
+
+    if (leftSensorValue < lineThreshold || rightSensorValue < lineThreshold) {
+      lineDetected = true;
+    }
+  } else {
+    if (leftSensorValue < lineThreshold && rightSensorValue < lineThreshold) {
+      // Both sensors detect the line: Move forward
+      moveForward();
+
+      // Print motor speeds to serial monitor
+      Serial.print(" | Motor Speeds: ");
+      Serial.print("Left: ");
+      Serial.print(128);
+      Serial.print(" | Right: ");
+      Serial.println(128);
+    } else if (leftSensorValue < lineThreshold) {
+      // Only the left sensor detects the line: Turn right
+      turnRight();
+
+      // Print motor speeds to serial monitor
+      Serial.print(" | Motor Speeds: ");
+      Serial.print("Left: ");
+      Serial.print(128);
+      Serial.print(" | Right: ");
+      Serial.println(0);
+    } else if (rightSensorValue < lineThreshold) {
+      // Only the right sensor detects the line: Turn left
+      turnLeft();
+
+      // Print motor speeds to serial monitor
+      Serial.print(" | Motor Speeds: ");
+      Serial.print("Left: ");
+      Serial.print(0);
+      Serial.print(" | Right: ");
+      Serial.println(128);
+    } else {
+      // No line detected: Stop
+      stop();
+
+      // Print motor speeds to serial monitor
+      Serial.print(" | Motor Speeds: ");
+      Serial.print("Left: ");
+      Serial.print(0);
+      Serial.print(" | Right: ");
+      Serial.println(0);
+    }
+  }
+
+  delay(50); // adjust the delay to change the update rate
+}
+
+void moveForwardAtMaxSpeed() {
+  analogWrite(motorLeftPin1, maxSpeed);
+  analogWrite(motorLeftPin2, 0);
+  analogWrite(motorRightPin1, maxSpeed);
+  analogWrite(motorRightPin2, 0);
+}
+
+void moveForward() {
+  analogWrite(motorLeftPin1, 128);
+  analogWrite(motorLeftPin2, 0);
+  analogWrite(motorRightPin1, 128);
+  analogWrite(motorRightPin2, 0);
+}
+
+void turnRight() {
+  analogWrite(motorLeftPin1, 128);
+  analogWrite(motorLeftPin2, 0);
+  analogWrite(motorRightPin1, 0);
+  analogWrite(motorRightPin2, 128);
+}
+
+void turnLeft() {
+  analogWrite(motorLeftPin1, 0);
+  analogWrite(motorLeftPin2, 128);
+  analogWrite(motorRightPin1, 128);
+  analogWrite(motorRightPin2, 0);
+}
+
+void stop() {
+  analogWrite(motorLeftPin1, 0);
+  analogWrite(motorLeftPin2, 0);
+  analogWrite(motorRightPin1, 0);
+  analogWrite(motorRightPin2, 0);
+}
